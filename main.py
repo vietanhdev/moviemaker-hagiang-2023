@@ -1,6 +1,7 @@
 from multiprocessing import freeze_support
 
 import cv2
+from gpiozero import Button
 
 from movie_maker import TimeLapsMovieMaker
 
@@ -16,6 +17,15 @@ if __name__ == '__main__':
     # Show full screen window
     cv2.namedWindow("Image", cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty("Image", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+    # Setup buttons
+    capture_button = Button(23)
+    play_button = Button(24)
+    export_video_button = Button(25)
+
+    capture_button.when_pressed = movie_maker.capture_frame
+    play_button.when_pressed = movie_maker.playback
+    export_video_button.when_pressed = movie_maker.output_video
 
     while True:
         live_frame = movie_maker.render_live_frame()
