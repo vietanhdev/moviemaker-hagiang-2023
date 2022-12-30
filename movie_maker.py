@@ -4,6 +4,8 @@ import tempfile
 import time
 import uuid
 from multiprocessing import Process, Queue
+from datetime import datetime
+
 
 import cv2
 
@@ -40,14 +42,20 @@ class TimeLapsMovieMaker:
             return
         frame_width = self.captured_frames[0].shape[1]
         frame_height = self.captured_frames[0].shape[0]
-        file_path = os.path.join(self.tmp_dir, str(uuid.uuid4()) + ".mp4")
-        out = cv2.VideoWriter(file_path, cv2.VideoWriter_fourcc(*'MP4V'), self.playback_fps, (frame_width, frame_height))
+        print(frame_width)
+        print(frame_height)
+        now = datetime.now()
+        dt_string = now.strftime("%H_%M_%S_%d_%m_%Y")
+        file_path = os.path.join(self.tmp_dir, dt_string + ".mp4")
+        out = cv2.VideoWriter(file_path, cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), self.playback_fps, (frame_width, frame_height))
         self.writing_frame_id = 0
         self.mode = "WRITING_VIDEO"
         for self.writing_frame_id in range(len(self.captured_frames)):
             out.write(self.captured_frames[self.writing_frame_id])
         out.release()
         self.mode = "LIVE"
+        self.captured_frames = []
+        
 
     def capture_frame(self):
         """Capture frame from frame queue"""
