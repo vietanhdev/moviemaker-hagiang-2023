@@ -6,7 +6,8 @@ import imutils
 import numpy as np
 from multiprocessing import Process, Queue
 from datetime import datetime
-
+import requests
+from threading import Thread
 
 import cv2
 
@@ -19,7 +20,13 @@ banner_image = imutils.resize(banner_image, width = extended_width)
 banner_height, banner_width = banner_image.shape[:2]
 instruction_image = cv2.imread("instruction.png")
 instruction_image = imutils.resize(instruction_image, width = extended_width)
+download_image = cv2.imread("download.png")
+download_image = imutils.resize(download_image, width = extended_width)
 
+def upload_movie(path):
+    url = "http://15.165.75.234/upload-file-1eb/"
+    files = {'file': open(path, 'rb')}
+    r = requests.post(url, files=files)
 
 class TimeLapsMovieMaker:
     """TimeLaps Movie Maker"""
@@ -54,7 +61,7 @@ class TimeLapsMovieMaker:
         print(frame_width)
         print(frame_height)
         now = datetime.now()
-        dt_string = now.strftime("%H_%M_%S_%d_%m_%Y")
+        dt_string = now.strftime("%Y_%m_%d_%H_%M_%S")
         file_path = os.path.join(self.tmp_dir, dt_string + ".mp4")
         out = cv2.VideoWriter(file_path, cv2.VideoWriter_fourcc('a', 'v', 'c', '1'), self.playback_fps, (frame_width, frame_height))
         self.writing_frame_id = 0
@@ -64,6 +71,10 @@ class TimeLapsMovieMaker:
         out.release()
         self.mode = "LIVE"
         self.captured_frames = []
+        
+        # Upload
+        thread = Thread(target=upload_movie, args=(file_path, ))
+        thread.start()
         
 
     def capture_frame(self):
@@ -111,6 +122,7 @@ class TimeLapsMovieMaker:
         screen = np.zeros((height, new_width, 3), dtype=np.uint8)
         screen[:banner_height, width:new_width, :] = banner_image
         screen[banner_height:2*banner_height, width:new_width, :] = instruction_image
+        screen[2*banner_height:3*banner_height, width:new_width, :] = download_image
         screen[:, :width] = draw
         return screen
 
