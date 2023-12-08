@@ -2,7 +2,7 @@ import os
 import pathlib
 import tempfile
 import time
-import uuid
+import imutils
 from multiprocessing import Process, Queue
 from datetime import datetime
 
@@ -104,6 +104,7 @@ class TimeLapsMovieMaker:
         vid = cv2.VideoCapture(0)
         while True:
             _, frame = vid.read()
+            frame = imutils.resize(frame, height=768)
             self.enqueue_frame(frame)
 
     def render_info(self, frame):
@@ -114,4 +115,4 @@ class TimeLapsMovieMaker:
         if self.mode == "WRITING_VIDEO":
             text += " - Writing: {}/{}".format(self.writing_frame_id, len(self.captured_frames))
         cv2.putText(frame, text,
-                    (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
+                    (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2, cv2.LINE_AA)
