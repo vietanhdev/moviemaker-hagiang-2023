@@ -3,6 +3,7 @@ import pathlib
 import tempfile
 import time
 import imutils
+import numpy as np
 from multiprocessing import Process, Queue
 from datetime import datetime
 
@@ -10,6 +11,14 @@ from datetime import datetime
 import cv2
 
 from config import MAX_QUEUE_SIZE
+
+
+extended_width = 400
+banner_image = cv2.imread("maylamphim.png")
+banner_image = imutils.resize(banner_image, width = extended_width)
+banner_height, banner_width = banner_image.shape[:2]
+instruction_image = cv2.imread("instruction.png")
+instruction_image = imutils.resize(instruction_image, width = extended_width)
 
 
 class TimeLapsMovieMaker:
@@ -70,6 +79,8 @@ class TimeLapsMovieMaker:
 
     def render_live_frame(self):
         """Render live frame to screen"""
+        extended_width = 300
+        banner_image
         draw = None
         if self.mode == "LIVE":
             draw = self.frames.get()
@@ -88,7 +99,20 @@ class TimeLapsMovieMaker:
             draw = self.captured_frames[self.writing_frame_id].copy()
 
         self.render_info(draw)
+        draw = self.render_banner(draw)
+        
         return draw
+    
+    def render_banner(self, draw):
+        if draw is None:
+            return draw
+        height, width = draw.shape[:2]
+        new_width = width + extended_width
+        screen = np.zeros((height, new_width, 3), dtype=np.uint8)
+        screen[:banner_height, width:new_width, :] = banner_image
+        screen[banner_height:2*banner_height, width:new_width, :] = instruction_image
+        screen[:, :width] = draw
+        return screen
 
     def start_capture(self):
         """Start capturing process to get frame from camera"""
@@ -104,7 +128,7 @@ class TimeLapsMovieMaker:
         vid = cv2.VideoCapture(0)
         while True:
             _, frame = vid.read()
-            frame = imutils.resize(frame, height=768)
+            frame = imutils.resize(frame, height=720)
             self.enqueue_frame(frame)
 
     def render_info(self, frame):
